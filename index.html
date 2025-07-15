@@ -58,32 +58,10 @@
         <aside class="w-full lg:w-1/4 bg-white p-4 rounded-lg shadow-md overflow-hidden flex flex-col">
             <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">目前颱風列表</h2>
             <div id="typhoon-list" class="flex-1 overflow-y-auto custom-scrollbar">
-                <!-- 範例颱風項目 -->
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-1">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 蘇拉 (Saola)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/10</p>
+                <div class="text-gray-500 text-center py-10" id="typhoon-list-loading">
+                    載入颱風資料中...
                 </div>
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-2">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 海葵 (Haikui)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/12</p>
-                </div>
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-3">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 小犬 (Koinu)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/14</p>
-                </div>
-                <!-- 更多颱風項目可以動態加入 -->
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-4">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 杜蘇芮 (Doksuri)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/08</p>
-                </div>
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-5">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 卡努 (Khanun)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/05</p>
-                </div>
-                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-6">
-                    <h3 class="text-lg font-semibold text-gray-700">颱風 蘭恩 (Lan)</h3>
-                    <p class="text-sm text-gray-500">生成日期: 2025/07/03</p>
-                </div>
+                <!-- 颱風項目將由 JavaScript 動態載入 -->
             </div>
         </aside>
 
@@ -94,171 +72,241 @@
                 <div id="typhoon-details-placeholder" class="text-gray-500 text-center py-10">
                     請從左側列表選擇一個颱風以查看其詳細資訊。
                 </div>
-
-                <!-- 範例颱風詳細資訊 (預設隱藏) -->
-                <div id="typhoon-1-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 蘇拉 (Saola)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 20.5 度，東經 122.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 51 公尺 (16級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 63 公尺 (17級風以上)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 200 公里</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 80 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北方向移動，逐漸接近台灣南部海域。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">陸上颱風警報：屏東、台東、花蓮地區請嚴加戒備。</p>
-                        <p class="text-gray-700">海上颱風警報：巴士海峽、台灣東南部海面請注意。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <!-- 這裡可以放置颱風路徑圖的圖片或地圖嵌入 -->
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風蘇拉路徑圖" alt="颱風蘇拉路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
+                <div id="typhoon-details-loading" class="text-gray-500 text-center py-10 hidden">
+                    載入颱風詳細資訊中...
                 </div>
+                <!-- 颱風詳細資訊將由 JavaScript 動態載入 -->
+            </div>
 
-                <div id="typhoon-2-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 海葵 (Haikui)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 中度颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 23.0 度，東經 125.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 38 公尺 (13級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 48 公尺 (15級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 150 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西方向移動，逐漸接近台灣東部陸地。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">陸上颱風警報：台東、花蓮、宜蘭地區請嚴加戒備。</p>
-                        <p class="text-gray-700">海上颱風警報：台灣東部海面、北部海面請注意。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風海葵路徑圖" alt="颱風海葵路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
+            <!-- 風場預報地圖 iframe -->
+            <div id="wind-map-container" class="mt-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">風場預報地圖</h4>
+                <div class="relative w-full h-[400px] bg-gray-200 rounded-lg overflow-hidden shadow-sm flex items-center justify-center">
+                    <iframe id="wind-map-iframe" class="absolute inset-0 w-full h-full rounded-lg hidden" frameborder="0" allowfullscreen></iframe>
+                    <p id="wind-map-loading" class="absolute text-gray-500">載入風場預報中...</p>
                 </div>
-
-                <div id="typhoon-3-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 小犬 (Koinu)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 輕度颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 18.0 度，東經 130.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 25 公尺 (10級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 35 公尺 (12級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 100 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北西方向移動，強度持續增強。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">目前無陸上颱風警報。</p>
-                        <p class="text-gray-700">目前無海上颱風警報。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風小犬路徑圖" alt="颱風小犬路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
-                </div>
-
-                <div id="typhoon-4-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 杜蘇芮 (Doksuri)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 19.0 度，東經 120.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 55 公尺 (17級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 68 公尺 (17級風以上)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 280 公里</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 100 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北方向移動，對台灣南部構成威脅。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">陸上颱風警報：金門、澎湖地區請嚴加戒備。</p>
-                        <p class="text-gray-700">海上颱風警報：台灣海峽南部、巴士海峽請注意。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風杜蘇芮路徑圖" alt="颱風杜蘇芮路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
-                </div>
-
-                <div id="typhoon-5-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 卡努 (Khanun)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 中度颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 26.0 度，東經 129.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 45 公尺 (14級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 55 公尺 (16級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 220 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝北北東方向移動，逐漸遠離台灣。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">目前無陸上颱風警報。</p>
-                        <p class="text-gray-700">目前無海上颱風警報。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風卡努路徑圖" alt="颱風卡努路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
-                </div>
-
-                <div id="typhoon-6-details" class="typhoon-detail-panel hidden">
-                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 蘭恩 (Lan)</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 28.0 度，東經 135.0 度</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 53 公尺 (16級風)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 65 公尺 (17級風以上)</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 250 公里</p>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 90 公里</p>
-                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝東北方向移動，對日本構成威脅。</p>
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
-                        <p class="text-gray-700">目前無陸上颱風警報。</p>
-                        <p class="text-gray-700">目前無海上颱風警報。</p>
-                    </div>
-                    <div class="mt-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
-                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風蘭恩路徑圖" alt="颱風蘭恩路徑圖" class="w-full h-auto rounded-lg shadow-sm">
-                    </div>
-                </div>
-
             </div>
         </section>
     </main>
 
     <script>
-        // 等待 DOMContentLoaded 事件確保所有 HTML 元素都已載入
-        document.addEventListener('DOMContentLoaded', () => {
-            // 取得所有颱風項目元素
-            const typhoonItems = document.querySelectorAll('.typhoon-item');
-            // 取得颱風詳細資訊的內容區塊
+        // 中央氣象署開放資料平台 API Key (由使用者提供)
+        const CWA_API_KEY = 'CWA-DA27CC49-2356-447C-BDB3-D5AA4071E24B';
+        // 中央氣象署颱風警報 API 端點 (W-C0058-001: 颱風警報)
+        const CWA_TYPHOON_API_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0058-001?Authorization=${CWA_API_KEY}`;
+        // 風場預報顯示系統 API 基礎 URL
+        const WIND_MAP_BASE_URL = 'https://www.twipcam.com/api/v1/map/wind';
+
+        // 用來儲存從 API 獲取的颱風資料，方便點擊時快速查找
+        let typhoonDataMap = new Map();
+
+        // 載入預設地圖 (台灣中心) 的函數
+        function loadDefaultMap() {
+            const defaultLat = 23.5; // 台灣中心緯度
+            const defaultLon = 121;  // 台灣中心經度
+            const defaultZoom = 5;   // 預設地圖縮放程度
+            const defaultMapSrc = `${WIND_MAP_BASE_URL}?lat=${defaultLat}&lon=${defaultLon}&zoom=${defaultZoom}`;
+            const windMapIframe = document.getElementById('wind-map-iframe');
+            const windMapLoading = document.getElementById('wind-map-loading');
+
+            windMapIframe.src = defaultMapSrc;
+            windMapLoading.classList.remove('hidden'); // 顯示載入提示
+            windMapIframe.classList.add('hidden'); // 隱藏 iframe 直到載入完成
+        }
+
+        // 顯示颱風詳細資訊的函數
+        function displayTyphoonDetails(typhoonId) {
             const typhoonDetailsContent = document.getElementById('typhoon-details-content');
-            // 取得詳細資訊的預設提示文字
             const typhoonDetailsPlaceholder = document.getElementById('typhoon-details-placeholder');
+            const typhoonDetailsLoading = document.getElementById('typhoon-details-loading');
+            const windMapIframe = document.getElementById('wind-map-iframe');
+            const windMapLoading = document.getElementById('wind-map-loading');
 
-            // 為每個颱風項目添加點擊事件監聽器
-            typhoonItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    // 取得點擊的颱風項目的 ID
-                    const typhoonId = item.dataset.typhoonId;
+            // 顯示載入提示，隱藏佔位符
+            typhoonDetailsPlaceholder.classList.add('hidden');
+            typhoonDetailsLoading.classList.remove('hidden');
+            typhoonDetailsContent.innerHTML = ''; // 清空舊內容
 
-                    // 隱藏所有颱風詳細資訊面板
-                    document.querySelectorAll('.typhoon-detail-panel').forEach(panel => {
-                        panel.classList.add('hidden');
+            const typhoon = typhoonDataMap.get(typhoonId);
+
+            if (typhoon) {
+                // 隱藏載入提示
+                typhoonDetailsLoading.classList.add('hidden');
+
+                // 解析颱風名稱和警報內容
+                const typhoonName = typhoon.typhoonName || '未知颱風';
+                const issueTime = typhoon.issueTime || '無發布時間';
+                let alertContent = '無警報內容。';
+
+                // 嘗試從 weatherElement 中找到警報內容
+                const weatherElements = typhoon.weatherElement || [];
+                const alertElement = weatherElements.find(el => el.elementName === '警報內容');
+                if (alertElement && alertElement.description) {
+                    alertContent = alertElement.description;
+                } else if (typhoon.description) { // 有些API可能直接在頂層有description
+                    alertContent = typhoon.description;
+                }
+
+                // 嘗試從 location 或其他結構中獲取座標
+                let lat = 23.5; // 預設台灣中心
+                let lon = 121;
+                let zoom = 5;
+
+                // 根據 CWA API 的常見結構尋找座標，這部分可能需要根據實際 API 回應調整
+                // 假設颱風中心座標可能在 location.lat/lon 或 elementValue 中
+                const locationElements = typhoon.location || [];
+                if (locationElements.length > 0 && locationElements[0].lat && locationElements[0].lon) {
+                    lat = parseFloat(locationElements[0].lat);
+                    lon = parseFloat(locationElements[0].lon);
+                    zoom = 7; // 如果有精確座標，放大地圖
+                } else {
+                    // 如果沒有直接的 lat/lon，嘗試從描述中解析或保持預設
+                    console.warn(`未能在颱風 ${typhoonName} 的資料中找到明確座標，將使用預設地圖中心。`);
+                }
+
+                // 動態生成詳細資訊 HTML
+                const detailsHtml = `
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">${typhoonName}</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">警報發布時間:</span> ${issueTime}</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">警報內容</h4>
+                        <p class="text-gray-700 whitespace-pre-wrap">${alertContent}</p>
+                    </div>
+                    <p class="text-gray-600 mt-4"><span class="font-semibold">目前強度:</span> 資料暫無提供</p>
+                    <p class="text-gray-600"><span class="font-semibold">近中心最大風速:</span> 資料暫無提供</p>
+                    <p class="text-gray-600"><span class="font-semibold">七級風暴風半徑:</span> 資料暫無提供</p>
+                    <p class="text-gray-600"><span class="font-semibold">預計路徑:</span> 資料暫無提供</p>
+                `;
+                typhoonDetailsContent.innerHTML = detailsHtml;
+
+                // 更新風場預報地圖的 iframe 來源
+                const mapSrc = `${WIND_MAP_BASE_URL}?lat=${lat}&lon=${lon}&zoom=${zoom}`;
+                windMapIframe.src = mapSrc;
+                windMapLoading.classList.remove('hidden'); // 顯示載入提示
+                windMapIframe.classList.add('hidden'); // 隱藏 iframe 直到載入完成
+
+            } else {
+                // 如果找不到颱風資料，顯示錯誤訊息
+                typhoonDetailsLoading.classList.add('hidden');
+                typhoonDetailsContent.innerHTML = `
+                    <div class="text-red-500 text-center py-10">
+                        找不到颱風 ${typhoonId} 的詳細資訊。
+                    </div>
+                `;
+                // 載入預設地圖
+                loadDefaultMap();
+            }
+        }
+
+        // 渲染颱風列表的函數
+        function renderTyphoonList(typhoons) {
+            const typhoonListDiv = document.getElementById('typhoon-list');
+            const typhoonListLoading = document.getElementById('typhoon-list-loading');
+            typhoonListDiv.innerHTML = ''; // 清空現有列表
+            typhoonListLoading.classList.add('hidden'); // 隱藏載入提示
+
+            if (typhoons && typhoons.length > 0) {
+                typhoons.forEach(typhoon => {
+                    // 從 API 資料中提取所需資訊
+                    const typhoonId = typhoon.identifier; // 使用 identifier 作為唯一 ID
+                    const typhoonName = typhoon.typhoonName || '未知颱風';
+                    const issueTime = typhoon.issueTime ? new Date(typhoon.issueTime).toLocaleString() : '無發布時間';
+
+                    // 將完整的颱風資料儲存起來，方便後續點擊時使用
+                    typhoonDataMap.set(typhoonId, typhoon);
+
+                    const typhoonItem = document.createElement('div');
+                    typhoonItem.classList.add(
+                        'typhoon-item', 'p-3', 'mb-2', 'bg-gray-50', 'hover:bg-blue-100',
+                        'rounded-lg', 'cursor-pointer', 'transition', 'duration-200', 'ease-in-out'
+                    );
+                    typhoonItem.dataset.typhoonId = typhoonId;
+                    // 這裡不直接設定 lat/lon/zoom，因為這些可能需要從更深層的 API 資料中解析
+                    // 點擊時再從 typhoonDataMap 中獲取並解析
+
+                    typhoonItem.innerHTML = `
+                        <h3 class="text-lg font-semibold text-gray-700">${typhoonName}</h3>
+                        <p class="text-sm text-gray-500">發布時間: ${issueTime}</p>
+                    `;
+
+                    typhoonItem.addEventListener('click', () => {
+                        // 移除所有颱風項目的 active 樣式
+                        document.querySelectorAll('.typhoon-item').forEach(item => {
+                            item.classList.remove('bg-blue-200', 'border-l-4', 'border-blue-500');
+                        });
+                        // 為當前點擊的颱風項目添加 active 樣式
+                        typhoonItem.classList.add('bg-blue-200', 'border-l-4', 'border-blue-500');
+
+                        displayTyphoonDetails(typhoonId);
                     });
-
-                    // 顯示預設提示文字，然後再判斷是否隱藏
-                    typhoonDetailsPlaceholder.classList.remove('hidden');
-
-                    // 顯示對應的颱風詳細資訊面板
-                    const selectedTyphoonPanel = document.getElementById(`${typhoonId}-details`);
-                    if (selectedTyphoonPanel) {
-                        selectedTyphoonPanel.classList.remove('hidden');
-                        // 如果顯示了詳細資訊，就隱藏預設提示文字
-                        typhoonDetailsPlaceholder.classList.add('hidden');
-                    }
-
-                    // 移除所有颱風項目的 active 樣式
-                    typhoonItems.forEach(typhoonItem => {
-                        typhoonItem.classList.remove('bg-blue-200', 'border-l-4', 'border-blue-500');
-                    });
-
-                    // 為當前點擊的颱風項目添加 active 樣式
-                    item.classList.add('bg-blue-200', 'border-l-4', 'border-blue-500');
+                    typhoonListDiv.appendChild(typhoonItem);
                 });
-            });
+            } else {
+                typhoonListDiv.innerHTML = `
+                    <div class="text-gray-500 text-center py-10">
+                        目前無颱風警報資料。
+                    </div>
+                `;
+            }
+        }
+
+        // 從中央氣象署 API 獲取颱風資料的函數
+        async function fetchTyphoonData() {
+            const typhoonListLoading = document.getElementById('typhoon-list-loading');
+            typhoonListLoading.classList.remove('hidden'); // 顯示載入提示
+
+            try {
+                const response = await fetch(CWA_TYPHOON_API_URL, {
+                    method: 'GET',
+                    // CWA API 通常使用 Authorization header 或直接在 URL 中帶入 key
+                    // 這裡根據 Swagger 範例，直接在 URL 中帶入 Authorization 參數
+                });
+
+                // 輸出完整的 Response 物件到控制台，以便偵錯
+                console.log('API Response Object:', response);
+
+                if (!response.ok) {
+                    // 如果 HTTP 狀態碼不是 2xx，拋出錯誤
+                    const errorText = await response.text(); // 嘗試讀取錯誤訊息
+                    console.error(`HTTP 錯誤! 狀態碼: ${response.status}, 狀態文字: ${response.statusText}, 回應內容: ${errorText}`);
+                    throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}, 訊息: ${response.statusText || '未知錯誤'}`);
+                }
+
+                const data = await response.json();
+
+                // 檢查 API 回應是否成功
+                if (data.success === 'true' && data.records && data.records.typhoon) {
+                    renderTyphoonList(data.records.typhoon);
+                } else {
+                    console.error('API 回應資料結構不符或 success 為 false:', data);
+                    document.getElementById('typhoon-list').innerHTML = `
+                        <div class="text-red-500 text-center py-10">
+                            無法解析颱風資料，請檢查 API 回應。
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('獲取颱風資料失敗:', error); // 輸出完整的錯誤物件
+                let errorMessage = '載入颱風資料失敗。';
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                    errorMessage += '可能是網路連線問題，或瀏覽器安全設定（CORS）阻擋了請求。';
+                } else {
+                    errorMessage += `錯誤訊息: ${error.message}。請確認 API Key 是否正確。`;
+                }
+                document.getElementById('typhoon-list').innerHTML = `
+                    <div class="text-red-500 text-center py-10">
+                        ${errorMessage}
+                    </div>
+                `;
+            } finally {
+                typhoonListLoading.classList.add('hidden'); // 無論成功或失敗都隱藏載入提示
+            }
+        }
+
+        // 網頁載入完成後執行
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDefaultMap(); // 初始載入預設地圖
+            fetchTyphoonData(); // 獲取颱風資料
         });
     </script>
 </body>
