@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颱風訊息整合網</title>
-    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715201500 -->
+    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715210000 -->
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzxH+iQ/Y5kLfNDuXiUNGpZhFmY="
+     crossorigin=""/>
     <style>
         /* 設定 Inter 字體 */
         body {
@@ -43,11 +47,23 @@
             background-color: #e2e8f0; /* bg-gray-200 */
             border-radius: 0.5rem; /* rounded-lg */
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-            display: flex; /* 讓內容居中 */
-            align-items: center;
-            justify-content: center;
+            /* 移除 display: flex; align-items: center; justify-content: center; */
+            /* 讓 Leaflet 接管地圖顯示 */
             color: #6b7280; /* text-gray-500 */
             font-size: 1.125rem; /* text-lg */
+        }
+        /* Leaflet 地圖載入時的提示 */
+        #custom-typhoon-map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000; /* 確保在地圖上方 */
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            color: #4b5563; /* text-gray-700 */
         }
     </style>
 </head>
@@ -115,10 +131,14 @@
 
             <!-- 新增各國颱風路徑預測圖區塊 (自定義繪製) -->
             <div id="international-maps-container" class="mt-6">
-                <h4 class="text-lg font-semibold text-gray-800 mb-2">各國颱風路徑預測圖 (自定義繪製)</h4>
-                <div id="custom-typhoon-map">
-                    載入國際颱風路徑圖中...
-                    <!-- 這裡將會由 JavaScript 載入地圖函式庫並繪製颱風路徑 -->
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">各國颱風路徑預測圖 (JTWC 模擬)</h4>
+                <div class="relative">
+                    <div id="custom-typhoon-map">
+                        <!-- Leaflet 地圖將在這裡初始化 -->
+                    </div>
+                    <div id="custom-typhoon-map-loading" class="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-80 rounded-lg">
+                        載入國際颱風路徑圖中...
+                    </div>
                 </div>
             </div>
 
@@ -170,12 +190,17 @@
         const PROXY_BASE_URL = 'https://typhoon-proxy-server-new.vercel.app'; 
         const CWA_TYPHOON_API_URL = `${PROXY_BASE_URL}/get-typhoon-data`;
         const CWA_WARNINGS_API_URL = `${PROXY_BASE_URL}/get-cwa-warnings`; 
+        const INTERNATIONAL_TYPHOON_API_URL = `${PROXY_BASE_URL}/get-international-typhoon-data`; // 新增國際颱風資料 API 端點
         
         // 風場預報顯示系統 API 基礎 URL
         const WIND_MAP_BASE_URL = 'https://www.twipcam.com/api/v1/map/wind';
 
         // 用來儲存從 API 獲取的颱風資料，方便點擊時快速查找
         let typhoonDataMap = new Map();
+
+        // Leaflet 地圖實例
+        let internationalTyphoonMap = null;
+        let pathLayers = []; // 用來儲存地圖上的路徑圖層，方便清除
 
         // 載入預設地圖 (台灣中心) 的函數
         function loadDefaultMap() {
@@ -569,7 +594,7 @@
             }
 
             try {
-                // 向您部署的代理伺服器發送請求
+                // 向您部署的代理伺服器發送請求，不再傳遞 API Key
                 const response = await fetch(CWA_TYPHOON_API_URL, {
                     method: 'GET',
                 });
@@ -587,7 +612,7 @@
                 const data = await response.json();
 
                 // **新的資料解析邏輯 (根據 W-C0034-005 實際結構調整)**
-                // W-C0034-005 的資料位於 data.records.tropicalCyclones.tropicalCyclone 陣列中
+                // 檢查 API 回應資料結構
                 let typhoons = [];
                 if (data.records && data.records.tropicalCyclones && Array.isArray(data.records.tropicalCyclones.tropicalCyclone)) {
                     typhoons = data.records.tropicalCyclones.tropicalCyclone;
@@ -639,20 +664,169 @@
             }
         }
 
-        // 國際地圖的初始化和繪製邏輯將會在這裡加入
-        // 由於需要從各國氣象機構獲取原始資料，這部分需要先更新代理伺服器 (api.py)
-        // 接著會在前端引入地圖繪製函式庫 (例如 Leaflet.js) 來實現繪圖功能
+        // 初始化國際颱風地圖
+        function initializeInternationalTyphoonMap() {
+            const mapContainer = document.getElementById('custom-typhoon-map');
+            const mapLoading = document.getElementById('custom-typhoon-map-loading');
+
+            // 確保地圖容器有正確的尺寸
+            if (mapContainer && mapContainer.offsetWidth === 0) {
+                console.warn("custom-typhoon-map 容器沒有寬度，可能無法正確初始化地圖。");
+            }
+
+            if (internationalTyphoonMap) {
+                internationalTyphoonMap.remove(); // 如果地圖已經存在，先移除
+            }
+
+            // 初始化 Leaflet 地圖
+            internationalTyphoonMap = L.map('custom-typhoon-map', {
+                center: [23.5, 121], // 預設台灣中心
+                zoom: 4, // 預設縮放級別
+                zoomControl: false // 禁用預設的縮放按鈕
+            });
+
+            // 添加 OpenStreetMap 圖層
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(internationalTyphoonMap);
+
+            // 顯示載入提示
+            if (mapLoading) {
+                mapLoading.classList.remove('hidden');
+            }
+
+            // 獲取並繪製颱風路徑
+            fetchInternationalTyphoonData();
+        }
+
+        // 獲取國際颱風資料並繪製
+        async function fetchInternationalTyphoonData() {
+            const mapLoading = document.getElementById('custom-typhoon-map-loading');
+            if (mapLoading) {
+                mapLoading.classList.remove('hidden');
+            }
+
+            // 清除舊的路徑圖層
+            pathLayers.forEach(layer => {
+                if (internationalTyphoonMap && internationalTyphoonMap.hasLayer(layer)) {
+                    internationalTyphoonMap.removeLayer(layer);
+                }
+            });
+            pathLayers = [];
+
+            try {
+                console.log('Fetching international typhoon data from:', INTERNATIONAL_TYPHOON_API_URL);
+                const response = await fetch(INTERNATIONAL_TYPHOON_API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.success && data.typhoon) {
+                    console.log('Received international typhoon data:', data.typhoon);
+                    drawTyphoonPath(data.typhoon);
+                } else {
+                    console.error('Failed to get international typhoon data:', data.message || 'Unknown error');
+                    if (internationalTyphoonMap) {
+                        L.marker([23.5, 121]).addTo(internationalTyphoonMap)
+                         .bindPopup('無法載入國際颱風路徑資料。').openPopup();
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching international typhoon data:', error);
+                if (internationalTyphoonMap) {
+                    L.marker([23.5, 121]).addTo(internationalTyphoonMap)
+                     .bindPopup(`載入國際颱風路徑失敗: ${error.message}`).openPopup();
+                }
+            } finally {
+                if (mapLoading) {
+                    mapLoading.classList.add('hidden'); // 隱藏載入提示
+                }
+            }
+        }
+
+        // 繪製颱風路徑
+        function drawTyphoonPath(typhoon) {
+            if (!internationalTyphoonMap) {
+                console.error("地圖尚未初始化。");
+                return;
+            }
+
+            const pastCoords = typhoon.pastTrack.map(p => [p.lat, p.lon]);
+            const forecastCoords = typhoon.forecastTrack.map(p => [p.lat, p.lon]);
+            const currentPos = typhoon.currentPosition;
+
+            // 繪製歷史路徑 (實線)
+            if (pastCoords.length > 0) {
+                const pastPath = L.polyline(pastCoords, {color: 'blue', weight: 3}).addTo(internationalTyphoonMap);
+                pathLayers.push(pastPath);
+            }
+
+            // 繪製預測路徑 (虛線)
+            if (forecastCoords.length > 0) {
+                const forecastPath = L.polyline(forecastCoords, {color: 'red', weight: 3, dashArray: '5, 5'}).addTo(internationalTyphoonMap);
+                pathLayers.push(forecastPath);
+            }
+
+            // 繪製路徑點的標記
+            const allPoints = [...typhoon.pastTrack, ...typhoon.forecastTrack];
+            allPoints.forEach(point => {
+                const marker = L.circleMarker([point.lat, point.lon], {
+                    radius: 5,
+                    fillColor: '#ff7800',
+                    color: '#000',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(internationalTyphoonMap);
+                pathLayers.push(marker);
+
+                let popupContent = `<b>${typhoon.name}</b><br>`;
+                popupContent += `時間: ${new Date(point.time).toLocaleString()}<br>`;
+                popupContent += `緯度: ${point.lat.toFixed(2)}, 經度: ${point.lon.toFixed(2)}<br>`;
+                if (point.windSpeed_knots) {
+                    popupContent += `風速: ${point.windSpeed_knots} 節 (${point.windSpeed_ms} 公尺/秒)<br>`;
+                }
+                if (point.pressure_hpa) {
+                    popupContent += `氣壓: ${point.pressure_hpa} 百帕<br>`;
+                }
+                if (point.forecastPeriod_hours !== undefined && point.forecastPeriod_hours > 0) {
+                    popupContent += `預報時效: +${point.forecastPeriod_hours} 小時<br>`;
+                }
+                marker.bindPopup(popupContent);
+            });
+
+            // 標記當前位置 (使用不同的圖標或顏色)
+            if (currentPos) {
+                const currentMarker = L.circleMarker([currentPos.lat, currentPos.lon], {
+                    radius: 8,
+                    fillColor: '#007bff', // 藍色
+                    color: '#000',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 1
+                }).addTo(internationalTyphoonMap);
+                pathLayers.push(currentMarker);
+                currentMarker.bindPopup(`<b>${typhoon.name} (當前位置)</b><br>時間: ${new Date(currentPos.time).toLocaleString()}<br>緯度: ${currentPos.lat.toFixed(2)}, 經度: ${currentPos.lon.toFixed(2)}`).openPopup();
+                internationalTyphoonMap.setView([currentPos.lat, currentPos.lon], 5); // 將地圖中心移到當前位置
+            } else if (allPoints.length > 0) {
+                internationalTyphoonMap.fitBounds(L.polyline(allPoints.map(p => [p.lat, p.lon])).getBounds());
+            }
+        }
+
 
         // 網頁載入完成後執行
         document.addEventListener('DOMContentLoaded', () => {
-            loadDefaultMap(); // 初始載入預設地圖
-            fetchTyphoonData(); // 首次獲取颱風資料
+            loadDefaultMap(); // 初始載入預設地圖 (台灣周邊)
+            fetchTyphoonData(); // 首次獲取中央氣象署颱風資料
             fetchCWAWarnings(); // 首次獲取氣象特報資料
-            // setupInternationalMapSwitching() 已被移除，因為我們將自定義繪製地圖
+            initializeInternationalTyphoonMap(); // 初始化並載入國際颱風地圖
 
             // 每 10 秒自動獲取最新颱風資料和氣象特報
             setInterval(fetchTyphoonData, 10000); // 10000 毫秒 = 10 秒
             setInterval(fetchCWAWarnings, 10000); // 10000 毫秒 = 10 秒
+            // 每 30 秒更新國際颱風地圖 (可以調整頻率)
+            setInterval(fetchInternationalTyphoonData, 30000); 
         });
     </script>
 </body>
