@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颱風訊息整合網</title>
-    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715223000 -->
+    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715234500 -->
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Leaflet CSS -->
+    <!-- 引入 Leaflet CSS - 已更新 integrity 雜湊值 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzxH+iQ/Y5kLfNDuXiUNGpZhFmY="
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
     <style>
         /* 設定 Inter 字體 */
@@ -185,9 +185,9 @@
         </section>
     </main>
 
-    <!-- 載入 Leaflet JavaScript - 移到 body 底部，確保在自訂腳本前載入 -->
+    <!-- 載入 Leaflet JavaScript - 移到 body 底部，確保在自訂腳本前載入 - 已更新 integrity 雜湊值 -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/4K6pQBRyFDkXilkiWNMo="
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
 
     <script>
@@ -405,6 +405,7 @@
                 typhoonListLoading.classList.add('hidden'); // 隱藏載入提示
             }
 
+            console.log("Debug: renderTyphoonList called with typhoons:", typhoons); // 新增偵錯訊息
 
             if (typhoons && typhoons.length > 0) {
                 typhoons.forEach(typhoon => {
@@ -445,12 +446,14 @@
                     });
                     typhoonListDiv.appendChild(typhoonItem);
                 });
+                console.log(`Debug: Rendered ${typhoons.length} typhoon items.`); // 新增偵錯訊息
             } else {
                 document.getElementById('typhoon-list').innerHTML = `
                     <div class="text-gray-500 text-center py-10">
                         目前無颱風警報資料。
                     </div>
                 `;
+                console.log("Debug: No typhoon data received or typhoons array is empty."); // 新增偵錯訊息
             }
         }
 
@@ -462,6 +465,8 @@
             if (cwaWarningsLoading) {
                 cwaWarningsLoading.classList.add('hidden'); // 隱藏載入提示
             }
+
+            console.log("Debug: renderCWAWarningsList called with warnings:", warnings); // 新增偵錯訊息
 
             if (warnings && warnings.length > 0) {
                 warnings.forEach(warning => {
@@ -481,12 +486,14 @@
                     `;
                     cwaWarningsListDiv.appendChild(warningItem);
                 });
+                console.log(`Debug: Rendered ${warnings.length} CWA warning items.`); // 新增偵錯訊息
             } else {
                 cwaWarningsListDiv.innerHTML = `
                     <div class="text-gray-500 text-center py-10">
                         目前無符合篩選條件的氣象特報。
                     </div>
                 `;
+                console.log("Debug: No CWA warning data received or warnings array is empty."); // 新增偵錯訊息
             }
         }
 
@@ -563,6 +570,7 @@
                 }
 
                 const data = await response.json();
+                console.log("Debug: Received CWA typhoon data:", data); // 新增偵錯訊息
 
                 // 檢查 API 回應資料結構
                 let typhoons = [];
@@ -667,6 +675,7 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log("Debug: Received International typhoon data:", data); // 新增偵錯訊息
 
                 if (data.success && data.typhoon) {
                     console.log('Received international typhoon data:', data.typhoon);
@@ -698,6 +707,10 @@
                 return;
             }
 
+            console.log("Debug: Drawing typhoon path for:", typhoon.name); // 新增偵錯訊息
+            console.log("Debug: Past track points:", typhoon.pastTrack.length);
+            console.log("Debug: Forecast track points:", typhoon.forecastTrack.length);
+
             const pastCoords = typhoon.pastTrack.map(p => [p.lat, p.lon]);
             const forecastCoords = typhoon.forecastTrack.map(p => [p.lat, p.lon]);
             const currentPos = typhoon.currentPosition;
@@ -706,12 +719,14 @@
             if (pastCoords.length > 0) {
                 const pastPath = L.polyline(pastCoords, {color: 'blue', weight: 3}).addTo(internationalTyphoonMap);
                 pathLayers.push(pastPath);
+                console.log("Debug: Past track drawn.");
             }
 
             // 繪製預測路徑 (虛線)
             if (forecastCoords.length > 0) {
                 const forecastPath = L.polyline(forecastCoords, {color: 'red', weight: 3, dashArray: '5, 5'}).addTo(internationalTyphoonMap);
                 pathLayers.push(forecastPath);
+                console.log("Debug: Forecast track drawn.");
             }
 
             // 繪製路徑點的標記
@@ -741,6 +756,7 @@
                 }
                 marker.bindPopup(popupContent);
             });
+            console.log(`Debug: Drawn ${allPoints.length} path markers.`);
 
             // 標記當前位置 (使用不同的圖標或顏色)
             if (currentPos) {
@@ -755,17 +771,21 @@
                 pathLayers.push(currentMarker);
                 currentMarker.bindPopup(`<b>${typhoon.name} (當前位置)</b><br>時間: ${new Date(currentPos.time).toLocaleString()}<br>緯度: ${currentPos.lat.toFixed(2)}, 經度: ${currentPos.lon.toFixed(2)}`).openPopup();
                 internationalTyphoonMap.setView([currentPos.lat, currentPos.lon], 5); // 將地圖中心移到當前位置
+                console.log("Debug: Current position marker drawn and map centered.");
             } else if (allPoints.length > 0) {
                 internationalTyphoonMap.fitBounds(L.polyline(allPoints.map(p => [p.lat, p.lon])).getBounds());
+                console.log("Debug: Map fitted to all points.");
             }
         }
 
 
         // 網頁載入完成後執行
         window.onload = () => { 
+            console.log("Window loaded. Starting Leaflet initialization check."); // 新增偵錯訊息
             // 檢查 Leaflet 是否已載入，如果沒有，則延遲執行
             function tryInitializeLeafletMap() {
                 if (typeof L !== 'undefined') {
+                    console.log("Leaflet is defined. Initializing maps and fetching data."); // 新增偵錯訊息
                     loadDefaultMap(); // 初始載入預設地圖 (台灣周邊)
                     fetchTyphoonData(); // 首次獲取中央氣象署颱風資料
                     fetchCWAWarnings(); // 首次獲取氣象特報資料
@@ -777,7 +797,7 @@
                     // 每 30 秒更新國際颱風地圖 (可以調整頻率)
                     setInterval(fetchInternationalTyphoonData, 30000); 
                 } else {
-                    console.log("Leaflet is not yet defined, retrying initialization...");
+                    console.log("Leaflet is not yet defined, retrying initialization in 100ms..."); // 新增偵錯訊息
                     setTimeout(tryInitializeLeafletMap, 100); // 每 100 毫秒重試一次
                 }
             }
