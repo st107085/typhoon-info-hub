@@ -192,7 +192,19 @@
                 const mapSrc = `${WIND_MAP_BASE_URL}?lat=${lat}&lon=${lon}&zoom=${zoom}`;
                 windMapIframe.src = mapSrc;
                 windMapLoading.classList.remove('hidden'); // 顯示載入提示
-                windMapIframe.classList.add('hidden'); // 隱藏 iframe 直到載入完成
+                windMapIframe.classList.add('hidden'); // 初始隱藏 iframe
+
+                // 添加 load 事件監聽器，當地圖載入完成後才顯示
+                windMapIframe.onload = () => {
+                    windMapLoading.classList.add('hidden'); // 隱藏載入提示
+                    windMapIframe.classList.remove('hidden'); // 顯示 iframe
+                };
+                // 移除這行，因為它會嘗試存取跨來源 iframe 的 document 屬性，導致 SecurityError
+                // if (windMapIframe.contentWindow && windMapIframe.contentWindow.document.readyState === 'complete') {
+                //     windMapLoading.classList.add('hidden');
+                //     windMapIframe.classList.remove('hidden');
+                // }
+
 
             } else {
                 // 如果找不到颱風資料，顯示錯誤訊息
