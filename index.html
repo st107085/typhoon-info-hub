@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颱風訊息整合網</title>
-    <!-- 這是小秋的颱風網頁，最終更新測試 -->
+    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 -->
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -254,7 +254,7 @@
                     typhoonListDiv.appendChild(typhoonItem);
                 });
             } else {
-                typhoonListDiv.innerHTML = `
+                document.getElementById('typhoon-list').innerHTML = `
                     <div class="text-gray-500 text-center py-10">
                         目前無颱風警報資料。
                     </div>
