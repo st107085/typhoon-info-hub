@@ -134,42 +134,55 @@
                 // 隱藏載入提示
                 typhoonDetailsLoading.classList.add('hidden');
 
-                // 解析颱風名稱和警報內容 (根據 W-C0034-005 可能的結構調整)
-                // W-C0034-005 可能的結構是 records.TropicalCyclone[].TCName, records.TropicalCyclone[].TCID, records.TropicalCyclone[].ReportTime
-                const typhoonName = typhoon.TCName || typhoon.typhoonName || '未知颱風';
-                const issueTime = typhoon.ReportTime || typhoon.issueTime || '無發布時間';
+                // 解析颱風名稱和警報內容 (根據 W-C0034-005 實際結構調整)
+                const typhoonName = typhoon.cwaTyphoonName || typhoon.typhoonName || '未知颱風';
+                
+                // 獲取最新的分析數據點
+                const latestAnalysis = typhoon.analysisData && typhoon.analysisData.fix && typhoon.analysisData.fix.length > 0
+                                       ? typhoon.analysisData.fix[typhoon.analysisData.fix.length - 1]
+                                       : null;
+
+                const issueTime = latestAnalysis ? new Date(latestAnalysis.fixTime).toLocaleString() : '無發布時間';
                 let alertContent = '無詳細警報內容。'; // W-C0034-005 可能不包含詳細警報內容
 
-                // 嘗試從 W-C0034-005 的結構中尋找座標
+                // 嘗試從 analysisData.fix 中尋找座標
                 let lat = 23.5; // 預設台灣中心
                 let lon = 121;
                 let zoom = 5;
 
-                // 假設座標可能在 typhoon.Location.Lat 和 typhoon.Location.Lon
-                if (typhoon.Location && typhoon.Location.Lat && typhoon.Location.Lon) {
-                    lat = parseFloat(typhoon.Location.Lat);
-                    lon = parseFloat(typhoon.Location.Lon);
-                    zoom = 7; // 如果有精確座標，放大地圖
-                } else if (typhoon.lat && typhoon.lon) { // 兼容舊結構
-                    lat = parseFloat(typhoon.lat);
-                    lon = parseFloat(typhoon.lon);
-                    zoom = 7;
+                if (latestAnalysis && latestAnalysis.coordinate) {
+                    const coords = latestAnalysis.coordinate.split(',');
+                    if (coords.length === 2) {
+                        lat = parseFloat(coords[1]); // 緯度 (Lat) 是第二個
+                        lon = parseFloat(coords[0]); // 經度 (Lon) 是第一個
+                        zoom = 7; // 如果有精確座標，放大地圖
+                    }
                 } else {
                     console.warn(`未能在颱風 ${typhoonName} 的資料中找到明確座標，將使用預設地圖中心。`);
                 }
 
+                const maxWindSpeed = latestAnalysis ? (latestAnalysis.maxWindSpeed || 'N/A') : 'N/A';
+                const maxGustSpeed = latestAnalysis ? (latestAnalysis.maxGustSpeed || 'N/A') : 'N/A';
+                const pressure = latestAnalysis ? (latestAnalysis.pressure || 'N/A') : 'N/A';
+                const movingDirection = latestAnalysis ? (latestAnalysis.movingDirection || 'N/A') : 'N/A';
+                const movingSpeed = latestAnalysis ? (latestAnalysis.movingSpeed || 'N/A') : 'N/A';
+
+
                 // 動態生成詳細資訊 HTML
                 const detailsHtml = `
                     <h3 class="text-xl font-bold text-blue-700 mb-3">${typhoonName}</h3>
-                    <p class="text-gray-600 mb-2"><span class="font-semibold">發布時間:</span> ${issueTime}</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">最新分析時間:</span> ${issueTime}</p>
                     <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <h4 class="text-lg font-semibold text-blue-800 mb-2">颱風概況</h4>
                         <p class="text-gray-700 whitespace-pre-wrap">${alertContent}</p>
-                        <p class="text-gray-700 mt-2">目前中心緯度: ${lat.toFixed(2)} 經度: ${lon.toFixed(2)}</p>
+                        <p class="text-gray-700 mt-2"><span class="font-semibold">目前中心緯度:</span> ${lat.toFixed(2)} 經度: ${lon.toFixed(2)}</p>
+                        <p class="text-gray-600 mt-4"><span class="font-semibold">近中心最大風速:</span> ${maxWindSpeed} m/s</p>
+                        <p class="text-gray-600"><span class="font-semibold">近中心最大陣風:</span> ${maxGustSpeed} m/s</p>
+                        <p class="text-gray-600"><span class="font-semibold">中心氣壓:</span> ${pressure} hPa</p>
+                        <p class="text-gray-600"><span class="font-semibold">移動方向:</span> ${movingDirection}</p>
+                        <p class="text-gray-600"><span class="font-semibold">移動速度:</span> ${movingSpeed} km/hr</p>
                         <!-- 更多 W-C0034-005 可能的欄位可以根據實際 API 回應添加 -->
-                        <p class="text-gray-600 mt-4"><span class="font-semibold">目前強度:</span> 資料暫無提供</p>
-                        <p class="text-gray-600"><span class="font-semibold">近中心最大風速:</span> 資料暫無提供</p>
-                        <p class="text-gray-600"><span class="font-semibold">七級風暴風半徑:</span> 資料暫無提供</p>
+                        <p class="text-gray-600 mt-4"><span class="font-semibold">七級風暴風半徑:</span> 資料暫無提供</p>
                         <p class="text-gray-600"><span class="font-semibold">預計路徑:</span> 資料暫無提供</p>
                     </div>
                 `;
@@ -203,10 +216,15 @@
 
             if (typhoons && typhoons.length > 0) {
                 typhoons.forEach(typhoon => {
-                    // 從 API 資料中提取所需資訊 (根據 W-C0034-005 可能的結構調整)
-                    const typhoonId = typhoon.TCID || typhoon.identifier; // 使用 TCID 或 identifier 作為唯一 ID
-                    const typhoonName = typhoon.TCName || typhoon.typhoonName || '未知颱風';
-                    const issueTime = typhoon.ReportTime ? new Date(typhoon.ReportTime).toLocaleString() : (typhoon.issueTime ? new Date(typhoon.issueTime).toLocaleString() : '無發布時間');
+                    // 從 API 資料中提取所需資訊 (根據 W-C0034-005 實際結構調整)
+                    const typhoonId = `${typhoon.typhoonName || ''}_${typhoon.cwaTdNo || ''}_${typhoon.cwaTyNo || ''}`.replace(/_+$/, '') || '未知ID'; // 組合 ID
+                    const typhoonName = typhoon.cwaTyphoonName || typhoon.typhoonName || '未知颱風';
+                    
+                    // 獲取最新的分析數據點的時間
+                    const latestAnalysis = typhoon.analysisData && typhoon.analysisData.fix && typhoon.analysisData.fix.length > 0
+                                           ? typhoon.analysisData.fix[typhoon.analysisData.fix.length - 1]
+                                           : null;
+                    const issueTime = latestAnalysis ? new Date(latestAnalysis.fixTime).toLocaleString() : '無發布時間';
 
                     // 將完整的颱風資料儲存起來，方便後續點擊時使用
                     typhoonDataMap.set(typhoonId, typhoon);
@@ -220,7 +238,7 @@
                     
                     typhoonItem.innerHTML = `
                         <h3 class="text-lg font-semibold text-gray-700">${typhoonName}</h3>
-                        <p class="text-sm text-gray-500">發布時間: ${issueTime}</p>
+                        <p class="text-sm text-gray-500">最新分析時間: ${issueTime}</p>
                     `;
 
                     typhoonItem.addEventListener('click', () => {
@@ -267,11 +285,11 @@
 
                 const data = await response.json();
 
-                // **新的資料解析邏輯 (根據 W-C0034-005 可能的結構調整)**
-                // W-C0034-005 的資料可能在 data.records.TropicalCyclone 陣列中
+                // **新的資料解析邏輯 (根據 W-C0034-005 實際結構調整)**
+                // W-C0034-005 的資料位於 data.records.tropicalCyclones.tropicalCyclone 陣列中
                 let typhoons = [];
-                if (data.records && data.records.TropicalCyclone && Array.isArray(data.records.TropicalCyclone)) {
-                    typhoons = data.records.TropicalCyclone;
+                if (data.records && data.records.tropicalCyclones && Array.isArray(data.records.tropicalCyclones.tropicalCyclone)) {
+                    typhoons = data.records.tropicalCyclones.tropicalCyclone;
                 } else {
                     // 如果不是預期的結構，記錄錯誤並顯示訊息
                     console.error('API 回應資料結構不符預期 (W-C0034-005):', data);
