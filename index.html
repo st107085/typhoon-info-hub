@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颱風訊息整合網</title>
-    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715210000 -->
+    <!-- 這是小秋的颱風網頁，最終確認更新 - 2025年7月15日 - 版本 20250715223000 -->
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Leaflet CSS -->
@@ -184,6 +184,11 @@
             </div>
         </section>
     </main>
+
+    <!-- 載入 Leaflet JavaScript - 移到 body 底部，確保在自訂腳本前載入 -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/4K6pQBRyFDkXilkiWNMo="
+     crossorigin=""></script>
 
     <script>
         // **重要：這裡設定為您在 Vercel 部署的代理伺服器完整網址**
@@ -404,7 +409,7 @@
             if (typhoons && typhoons.length > 0) {
                 typhoons.forEach(typhoon => {
                     // 從 API 資料中提取所需資訊 (根據 W-C0034-005 實際結構調整)
-                    const typhoonId = `${typhoon.typhoonName || ''}_${typhoon.cwaTdNo || ''}_${typhoon.cwaTyNo || ''}`.replace(/_+$/, '') || '未知ID'; // 組合 ID
+                    const typhoonId = `${typhoon.cwaTyphoonName || ''}_${typhoon.cwaTdNo || ''}_${typhoon.cwaTyNo || ''}`.replace(/_+$/, '') || '未知ID'; // 組合 ID
                     const typhoonName = typhoon.cwaTyphoonName || typhoon.typhoonName || '未知颱風';
                     
                     // 獲取最新的分析數據點的時間
@@ -451,79 +456,38 @@
 
         // 渲染氣象特報列表的函數
         function renderCWAWarningsList(warnings) {
+            const cwaWarningsListDiv = document.getElementById('cwa-warnings-list');
             const cwaWarningsLoading = document.getElementById('cwa-warnings-loading');
+            cwaWarningsListDiv.innerHTML = ''; // 清空現有列表
             if (cwaWarningsLoading) {
                 cwaWarningsLoading.classList.add('hidden'); // 隱藏載入提示
             }
 
-            // 清空所有分類專區
-            const heavyRainDiv = document.getElementById('heavy-rain-warnings');
-            const denseFogDiv = document.getElementById('dense-fog-warnings');
-            const highTempDiv = document.getElementById('high-temp-warnings');
-            const strongWindDiv = document.getElementById('strong-wind-warnings');
-            const thunderstormDiv = document.getElementById('thunderstorm-warnings');
-
-            [heavyRainDiv, denseFogDiv, highTempDiv, strongWindDiv, thunderstormDiv].forEach(div => {
-                if (div) div.innerHTML = ''; // 清空內容
-            });
-
-            let hasHeavyRain = false;
-            let hasDenseFog = false;
-            let hasHighTemp = false;
-            let hasStrongWind = false;
-            let hasThunderstorm = false;
-
             if (warnings && warnings.length > 0) {
                 warnings.forEach(warning => {
-                    const title = warning.title || '';
-                    const description = warning.description || '';
-                    let appended = false; // 標記是否已添加到某個分類
+                    const warningItem = document.createElement('div');
+                    warningItem.classList.add(
+                        'p-3', 'mb-2', 'bg-red-50', 'hover:bg-red-100',
+                        'rounded-lg', 'transition', 'duration-200', 'ease-in-out', 'border', 'border-red-200'
+                    );
+                    
+                    const pubDate = warning.pubDate ? new Date(warning.pubDate).toLocaleString() : '無發布時間';
 
-                    const warningItemHtml = `
-                        <div class="p-2 mb-1 bg-white hover:bg-gray-50 rounded-lg transition duration-150 ease-in-out text-sm border border-gray-100">
-                            <h4 class="font-semibold text-gray-800">${title}</h4>
-                            <p class="text-xs text-gray-500">發布時間: ${new Date(warning.pubDate).toLocaleString()}</p>
-                            <p class="text-xs text-gray-600 mt-1 line-clamp-2">${description}</p>
-                            ${warning.link ? `<a href="${warning.link}" target="_blank" class="text-blue-500 hover:underline text-xs mt-1 block">查看詳情</a>` : ''}
-                        </div>
+                    warningItem.innerHTML = `
+                        <h3 class="text-lg font-semibold text-red-700">${warning.title || '無標題'}</h3>
+                        <p class="text-sm text-gray-500">發布時間: ${pubDate}</p>
+                        <p class="text-sm text-gray-700 mt-1">${warning.description || '無描述'}</p>
+                        ${warning.link ? `<a href="${warning.link}" target="_blank" class="text-blue-500 hover:underline text-sm mt-1 block">查看詳情</a>` : ''}
                     `;
-
-                    // 判斷並添加到對應的分類 (只保留用戶指定的五種)
-                    if ((title.includes("豪雨特報") || title.includes("大雨特報")) && heavyRainDiv) {
-                        heavyRainDiv.innerHTML += warningItemHtml;
-                        hasHeavyRain = true;
-                        appended = true;
-                    }
-                    if (title.includes("濃霧特報") && denseFogDiv) {
-                        denseFogDiv.innerHTML += warningItemHtml;
-                        hasDenseFog = true;
-                        appended = true;
-                    }
-                    if (title.includes("高溫特報") && highTempDiv) {
-                        highTempDiv.innerHTML += warningItemHtml;
-                        hasHighTemp = true;
-                        appended = true;
-                    }
-                    if (title.includes("強風特報") && strongWindDiv) {
-                        strongWindDiv.innerHTML += warningItemHtml;
-                        hasStrongWind = true;
-                        appended = true;
-                    }
-                    if (title.includes("大雷雨") && thunderstormDiv) {
-                        thunderstormDiv.innerHTML += warningItemHtml;
-                        hasThunderstorm = true;
-                        appended = true;
-                    }
-                    // 其他未列出的特報將不會被顯示
+                    cwaWarningsListDiv.appendChild(warningItem);
                 });
+            } else {
+                cwaWarningsListDiv.innerHTML = `
+                    <div class="text-gray-500 text-center py-10">
+                        目前無符合篩選條件的氣象特報。
+                    </div>
+                `;
             }
-
-            // 如果某個分類沒有特報，顯示提示訊息
-            if (!hasHeavyRain && heavyRainDiv) heavyRainDiv.innerHTML = '<p class="text-xs text-gray-400">目前無豪(大)雨特報。</p>';
-            if (!hasDenseFog && denseFogDiv) denseFogDiv.innerHTML = '<p class="text-xs text-gray-400">目前無濃霧特報。</p>';
-            if (!hasHighTemp && highTempDiv) highTempDiv.innerHTML = '<p class="text-xs text-gray-400">目前無高溫特報。</p>';
-            if (!hasStrongWind && strongWindDiv) strongWindDiv.innerHTML = '<p class="text-xs text-gray-400">目前無強風特報。</p>'; 
-            if (!hasThunderstorm && thunderstormDiv) thunderstormDiv.innerHTML = '<p class="text-xs text-gray-400">目前無大雷雨特報。</p>';
         }
 
         // 從代理伺服器獲取氣象特報資料的函數
@@ -553,30 +517,19 @@
                     renderCWAWarningsList(data.warnings);
                 } else {
                     console.error('CWA Warnings API 回應資料結構不符預期:', data);
-                    // 即使資料結構不符，也清空並顯示無特報訊息
-                    const allWarningDivs = [
-                        document.getElementById('heavy-rain-warnings'),
-                        document.getElementById('dense-fog-warnings'),
-                        document.getElementById('high-temp-warnings'),
-                        document.getElementById('strong-wind-warnings'),
-                        document.getElementById('thunderstorm-warnings')
-                    ];
-                    allWarningDivs.forEach(div => {
-                        if (div) div.innerHTML = '<p class="text-xs text-red-400">無法解析特報資料。</p>';
-                    });
+                    document.getElementById('cwa-warnings-list').innerHTML = `
+                        <div class="text-red-500 text-center py-10">
+                            無法解析氣象特報資料，請檢查 API 回應結構。
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('獲取氣象特報資料失敗:', error);
-                const allWarningDivs = [
-                    document.getElementById('heavy-rain-warnings'),
-                    document.getElementById('dense-fog-warnings'),
-                    document.getElementById('high-temp-warnings'),
-                    document.getElementById('strong-wind-warnings'),
-                    document.getElementById('thunderstorm-warnings')
-                ];
-                allWarningDivs.forEach(div => {
-                    if (div) div.innerHTML = `<p class="text-xs text-red-400">載入失敗: ${error.message}</p>`;
-                });
+                document.getElementById('cwa-warnings-list').innerHTML = `
+                    <div class="text-red-500 text-center py-10">
+                        載入氣象特報資料失敗。錯誤訊息: ${error.message}
+                    </div>
+                `;
             } finally {
                 if (cwaWarningsLoading) {
                     cwaWarningsLoading.classList.add('hidden'); // 隱藏載入提示
@@ -611,7 +564,6 @@
 
                 const data = await response.json();
 
-                // **新的資料解析邏輯 (根據 W-C0034-005 實際結構調整)**
                 // 檢查 API 回應資料結構
                 let typhoons = [];
                 if (data.records && data.records.tropicalCyclones && Array.isArray(data.records.tropicalCyclones.tropicalCyclone)) {
@@ -626,12 +578,6 @@
                     `;
                     return; // 停止執行
                 }
-
-                // ***偵錯訊息開始***
-                if (typhoons.length > 0 && typhoons[0].analysisData && typhoons[0].analysisData.fix && typhoons[0].analysisData.fix.length > 0) {
-                    console.log('Debug: Raw fixTime from API (first typhoon):', typhoons[0].analysisData.fix[typhoons[0].analysisData.fix.length - 1].fixTime);
-                }
-                // ***偵錯訊息結束***
 
                 if (typhoons.length > 0) {
                     renderTyphoonList(typhoons);
@@ -657,7 +603,7 @@
                     </div>
                 `;
             } finally {
-                // 只有當 typhoonListLoading 存在時才操作它的 classList
+                // 只有當 typhoonListLoading 為 null 時才操作它的 classList
                 if (typhoonListLoading) {
                     typhoonListLoading.classList.add('hidden'); // 無論成功或失敗都隱藏載入提示
                 }
@@ -816,18 +762,27 @@
 
 
         // 網頁載入完成後執行
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDefaultMap(); // 初始載入預設地圖 (台灣周邊)
-            fetchTyphoonData(); // 首次獲取中央氣象署颱風資料
-            fetchCWAWarnings(); // 首次獲取氣象特報資料
-            initializeInternationalTyphoonMap(); // 初始化並載入國際颱風地圖
+        window.onload = () => { 
+            // 檢查 Leaflet 是否已載入，如果沒有，則延遲執行
+            function tryInitializeLeafletMap() {
+                if (typeof L !== 'undefined') {
+                    loadDefaultMap(); // 初始載入預設地圖 (台灣周邊)
+                    fetchTyphoonData(); // 首次獲取中央氣象署颱風資料
+                    fetchCWAWarnings(); // 首次獲取氣象特報資料
+                    initializeInternationalTyphoonMap(); // 初始化並載入國際颱風地圖
 
-            // 每 10 秒自動獲取最新颱風資料和氣象特報
-            setInterval(fetchTyphoonData, 10000); // 10000 毫秒 = 10 秒
-            setInterval(fetchCWAWarnings, 10000); // 10000 毫秒 = 10 秒
-            // 每 30 秒更新國際颱風地圖 (可以調整頻率)
-            setInterval(fetchInternationalTyphoonData, 30000); 
-        });
+                    // 每 10 秒自動獲取最新颱風資料和氣象特報
+                    setInterval(fetchTyphoonData, 10000); // 10000 毫秒 = 10 秒
+                    setInterval(fetchCWAWarnings, 10000); // 10000 毫秒 = 10 秒
+                    // 每 30 秒更新國際颱風地圖 (可以調整頻率)
+                    setInterval(fetchInternationalTyphoonData, 30000); 
+                } else {
+                    console.log("Leaflet is not yet defined, retrying initialization...");
+                    setTimeout(tryInitializeLeafletMap, 100); // 每 100 毫秒重試一次
+                }
+            }
+            tryInitializeLeafletMap(); // 首次嘗試初始化
+        };
     </script>
 </body>
 </html>
