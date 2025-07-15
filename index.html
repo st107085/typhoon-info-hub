@@ -93,7 +93,9 @@
         // 中央氣象署開放資料平台 API Key (由使用者提供)
         const CWA_API_KEY = 'CWA-DA27CC49-2356-447C-BDB3-D5AA4071E24B';
         // 中央氣象署颱風警報 API 端點 (W-C0058-001: 颱風警報)
-        const CWA_TYPHOON_API_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0058-001?Authorization=${CWA_API_KEY}`;
+        // **重要：為了繞過 CORS 限制，我們使用 allorigins.win 作為代理伺服器**
+        const CWA_TYPHOON_API_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0058-001?Authorization=${CWA_API_KEY}`)}`;
+        
         // 風場預報顯示系統 API 基礎 URL
         const WIND_MAP_BASE_URL = 'https://www.twipcam.com/api/v1/map/wind';
 
