@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颱風訊息整合網</title>
+    <!-- 這是小秋的颱風網頁，最終更新測試 -->
     <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -90,11 +91,12 @@
     </main>
 
     <script>
-        // 中央氣象署開放資料平台 API Key (由使用者提供)
-        const CWA_API_KEY = 'CWA-DA27CC49-2356-447C-BDB3-D5AA4071E24B';
-        // 中央氣象署颱風警報 API 端點 (W-C0058-001: 颱風警報)
-        // **重要：為了繞過 CORS 限制，我們使用 allorigins.win 作為代理伺服器**
-        const CWA_TYPHOON_API_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://opendata.cwa.gov.tw/api/v1/rest/datastore/W-C0058-001?Authorization=${CWA_API_KEY}`)}`;
+        // 中央氣象署開放資料平台 API Key (此 Key 僅在代理伺服器上使用，前端不再直接呼叫)
+        // const CWA_API_KEY = 'CWA-DA27CC49-2356-447C-BDB3-D5AA4071E24B'; // 此行可註解或移除
+
+        // **重要：這裡設定為您在 Vercel 部署的代理伺服器完整網址**
+        // 請將 'https://typhoon-proxy-server.vercel.app' 替換為您實際在 Vercel 得到的網址！
+        const CWA_TYPHOON_API_URL = 'https://typhoon-proxy-server.vercel.app/get-typhoon-data';
         
         // 風場預報顯示系統 API 基礎 URL
         const WIND_MAP_BASE_URL = 'https://www.twipcam.com/api/v1/map/wind';
@@ -252,26 +254,25 @@
             }
         }
 
-        // 從中央氣象署 API 獲取颱風資料的函數
+        // 從代理伺服器獲取颱風資料的函數
         async function fetchTyphoonData() {
             const typhoonListLoading = document.getElementById('typhoon-list-loading');
             typhoonListLoading.classList.remove('hidden'); // 顯示載入提示
 
             try {
+                // 向您部署的代理伺服器發送請求
                 const response = await fetch(CWA_TYPHOON_API_URL, {
                     method: 'GET',
-                    // CWA API 通常使用 Authorization header 或直接在 URL 中帶入 key
-                    // 這裡根據 Swagger 範例，直接在 URL 中帶入 Authorization 參數
                 });
 
                 // 輸出完整的 Response 物件到控制台，以便偵錯
-                console.log('API Response Object:', response);
+                console.log('Proxy API Response Object:', response);
 
                 if (!response.ok) {
                     // 如果 HTTP 狀態碼不是 2xx，拋出錯誤
                     const errorText = await response.text(); // 嘗試讀取錯誤訊息
-                    console.error(`HTTP 錯誤! 狀態碼: ${response.status}, 狀態文字: ${response.statusText}, 回應內容: ${errorText}`);
-                    throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}, 訊息: ${response.statusText || '未知錯誤'}`);
+                    console.error(`Proxy HTTP 錯誤! 狀態碼: ${response.status}, 狀態文字: ${response.statusText}, 回應內容: ${errorText}`);
+                    throw new Error(`Proxy HTTP 錯誤! 狀態碼: ${response.status}, 訊息: ${response.statusText || '未知錯誤'}`);
                 }
 
                 const data = await response.json();
@@ -291,9 +292,9 @@
                 console.error('獲取颱風資料失敗:', error); // 輸出完整的錯誤物件
                 let errorMessage = '載入颱風資料失敗。';
                 if (error instanceof TypeError && error.message === 'Failed to fetch') {
-                    errorMessage += '可能是網路連線問題，或瀏覽器安全設定（CORS）阻擋了請求。';
+                    errorMessage += '可能是網路連線問題，或您的代理伺服器無法存取。';
                 } else {
-                    errorMessage += `錯誤訊息: ${error.message}。請確認 API Key 是否正確。`;
+                    errorMessage += `錯誤訊息: ${error.message}。請檢查代理伺服器狀態。`;
                 }
                 document.getElementById('typhoon-list').innerHTML = `
                     <div class="text-red-500 text-center py-10">
