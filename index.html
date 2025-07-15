@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颱風訊息整合網</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 設定 Inter 字體 */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 自定義滾動條樣式 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- 網頁標頭區塊 -->
+    <header class="bg-blue-700 text-white p-4 shadow-md flex flex-col md:flex-row items-center justify-between rounded-b-lg">
+        <!-- 網站名稱 -->
+        <div class="text-3xl font-bold mb-4 md:mb-0 md:mr-auto">
+            颱風訊息整合網
+        </div>
+        <!-- 其他功能按鈕 -->
+        <nav class="flex flex-wrap justify-center md:justify-end gap-3">
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                最新消息
+            </button>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                歷史資料
+            </button>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                防災資訊
+            </button>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                關於我們
+            </button>
+        </nav>
+    </header>
+
+    <!-- 主要內容區塊 -->
+    <main class="flex flex-1 flex-col lg:flex-row p-4 gap-4">
+        <!-- 左側颱風列表 -->
+        <aside class="w-full lg:w-1/4 bg-white p-4 rounded-lg shadow-md overflow-hidden flex flex-col">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">目前颱風列表</h2>
+            <div id="typhoon-list" class="flex-1 overflow-y-auto custom-scrollbar">
+                <!-- 範例颱風項目 -->
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-1">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 蘇拉 (Saola)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/10</p>
+                </div>
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-2">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 海葵 (Haikui)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/12</p>
+                </div>
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-3">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 小犬 (Koinu)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/14</p>
+                </div>
+                <!-- 更多颱風項目可以動態加入 -->
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-4">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 杜蘇芮 (Doksuri)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/08</p>
+                </div>
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-5">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 卡努 (Khanun)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/05</p>
+                </div>
+                <div class="typhoon-item p-3 mb-2 bg-gray-50 hover:bg-blue-100 rounded-lg cursor-pointer transition duration-200 ease-in-out" data-typhoon-id="typhoon-6">
+                    <h3 class="text-lg font-semibold text-gray-700">颱風 蘭恩 (Lan)</h3>
+                    <p class="text-sm text-gray-500">生成日期: 2025/07/03</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 中右側颱風詳細資訊 -->
+        <section class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-md overflow-hidden flex flex-col">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">颱風詳細資訊</h2>
+            <div id="typhoon-details-content" class="flex-1 overflow-y-auto custom-scrollbar">
+                <div id="typhoon-details-placeholder" class="text-gray-500 text-center py-10">
+                    請從左側列表選擇一個颱風以查看其詳細資訊。
+                </div>
+
+                <!-- 範例颱風詳細資訊 (預設隱藏) -->
+                <div id="typhoon-1-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 蘇拉 (Saola)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 20.5 度，東經 122.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 51 公尺 (16級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 63 公尺 (17級風以上)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 200 公里</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 80 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北方向移動，逐漸接近台灣南部海域。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">陸上颱風警報：屏東、台東、花蓮地區請嚴加戒備。</p>
+                        <p class="text-gray-700">海上颱風警報：巴士海峽、台灣東南部海面請注意。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <!-- 這裡可以放置颱風路徑圖的圖片或地圖嵌入 -->
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風蘇拉路徑圖" alt="颱風蘇拉路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div id="typhoon-2-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 海葵 (Haikui)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 中度颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 23.0 度，東經 125.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 38 公尺 (13級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 48 公尺 (15級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 150 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西方向移動，逐漸接近台灣東部陸地。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">陸上颱風警報：台東、花蓮、宜蘭地區請嚴加戒備。</p>
+                        <p class="text-gray-700">海上颱風警報：台灣東部海面、北部海面請注意。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風海葵路徑圖" alt="颱風海葵路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div id="typhoon-3-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 小犬 (Koinu)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 輕度颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 18.0 度，東經 130.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 25 公尺 (10級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 35 公尺 (12級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 100 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北西方向移動，強度持續增強。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">目前無陸上颱風警報。</p>
+                        <p class="text-gray-700">目前無海上颱風警報。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風小犬路徑圖" alt="颱風小犬路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div id="typhoon-4-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 杜蘇芮 (Doksuri)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 19.0 度，東經 120.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 55 公尺 (17級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 68 公尺 (17級風以上)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 280 公里</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 100 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝西北方向移動，對台灣南部構成威脅。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">陸上颱風警報：金門、澎湖地區請嚴加戒備。</p>
+                        <p class="text-gray-700">海上颱風警報：台灣海峽南部、巴士海峽請注意。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風杜蘇芮路徑圖" alt="颱風杜蘇芮路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div id="typhoon-5-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 卡努 (Khanun)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 中度颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 26.0 度，東經 129.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 45 公尺 (14級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 55 公尺 (16級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 220 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝北北東方向移動，逐漸遠離台灣。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">目前無陸上颱風警報。</p>
+                        <p class="text-gray-700">目前無海上颱風警報。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風卡努路徑圖" alt="颱風卡努路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div id="typhoon-6-details" class="typhoon-detail-panel hidden">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3">颱風 蘭恩 (Lan)</h3>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">目前強度:</span> 強烈颱風</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">中心位置:</span> 北緯 28.0 度，東經 135.0 度</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">近中心最大風速:</span> 每秒 53 公尺 (16級風)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">瞬間最大陣風:</span> 每秒 65 公尺 (17級風以上)</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">七級風暴風半徑:</span> 250 公里</p>
+                    <p class="text-gray-600 mb-2"><span class="font-semibold">十級風暴風半徑:</span> 90 公里</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">預計路徑:</span> 朝東北方向移動，對日本構成威脅。</p>
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">最新警報資訊</h4>
+                        <p class="text-gray-700">目前無陸上颱風警報。</p>
+                        <p class="text-gray-700">目前無海上颱風警報。</p>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">颱風路徑圖</h4>
+                        <img src="https://placehold.co/600x300/e0f2f7/2a6496?text=颱風蘭恩路徑圖" alt="颱風蘭恩路徑圖" class="w-full h-auto rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 等待 DOMContentLoaded 事件確保所有 HTML 元素都已載入
+        document.addEventListener('DOMContentLoaded', () => {
+            // 取得所有颱風項目元素
+            const typhoonItems = document.querySelectorAll('.typhoon-item');
+            // 取得颱風詳細資訊的內容區塊
+            const typhoonDetailsContent = document.getElementById('typhoon-details-content');
+            // 取得詳細資訊的預設提示文字
+            const typhoonDetailsPlaceholder = document.getElementById('typhoon-details-placeholder');
+
+            // 為每個颱風項目添加點擊事件監聽器
+            typhoonItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // 取得點擊的颱風項目的 ID
+                    const typhoonId = item.dataset.typhoonId;
+
+                    // 隱藏所有颱風詳細資訊面板
+                    document.querySelectorAll('.typhoon-detail-panel').forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+
+                    // 顯示預設提示文字，然後再判斷是否隱藏
+                    typhoonDetailsPlaceholder.classList.remove('hidden');
+
+                    // 顯示對應的颱風詳細資訊面板
+                    const selectedTyphoonPanel = document.getElementById(`${typhoonId}-details`);
+                    if (selectedTyphoonPanel) {
+                        selectedTyphoonPanel.classList.remove('hidden');
+                        // 如果顯示了詳細資訊，就隱藏預設提示文字
+                        typhoonDetailsPlaceholder.classList.add('hidden');
+                    }
+
+                    // 移除所有颱風項目的 active 樣式
+                    typhoonItems.forEach(typhoonItem => {
+                        typhoonItem.classList.remove('bg-blue-200', 'border-l-4', 'border-blue-500');
+                    });
+
+                    // 為當前點擊的颱風項目添加 active 樣式
+                    item.classList.add('bg-blue-200', 'border-l-4', 'border-blue-500');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
