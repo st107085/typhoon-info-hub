@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>各國颱風預測.kml</name>
+	<open>1</open>
+	<Folder>
+		<name>各國颱風預測</name>
+		<open>1</open>
+		<NetworkLink>
+			<name>颱風外海100KM</name>
+			<Link>
+				<href>https://satis.ncdr.nat.gov.tw/kml/twn100.kml</href>
+			</Link>
+		</NetworkLink>
+		<NetworkLink>
+			<name>各國預報路徑</name>
+			<Link>
+				<href>https://satis.ncdr.nat.gov.tw/kml/multityroute.aspx</href>
+				<refreshMode>onInterval</refreshMode>
+				<refreshInterval>1201</refreshInterval>
+			</Link>
+		</NetworkLink>
+	</Folder>
+</Document>
+</kml>
