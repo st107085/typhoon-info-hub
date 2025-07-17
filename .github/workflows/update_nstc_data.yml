@@ -1,0 +1,63 @@
+name: Update NSTC Typhoon Data Daily
+
+on:
+  schedule:
+    # 每 6 小時執行一次 (UTC 時間 00:00, 06:00, 12:00, 18:00)
+    # 這對應於台灣時間上午 8:00, 下午 2:00, 晚上 8:00, 凌晨 2:00 (UTC+8)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # 允許手動觸發此工作流程
+
+jobs:
+  download_and_push_data:
+    runs-on: ubuntu-latest # 在一個最新的 Ubuntu Linux 虛擬機上運行這個任務
+    steps:
+      - name: Checkout repository # 第一步：將您的 GitHub 倉庫程式碼下載到這個虛擬機
+        uses: actions/checkout@v3
+        # 這裡添加 fetch-depth: 0 以確保拉取所有歷史記錄，方便合併
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python # 設定 Python 環境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x' # 使用一個最新的 Python 版本
+
+      - name: Install dependencies # 安裝 Python 的 requests 函式庫，用於下載 KML
+        run: pip install requests
+
+      - name: Create data directory # 確保 'data' 目錄存在
+        run: mkdir -p data
+
+      - name: Download CSV from NSTC # 下載 NSTC 的 CSV 檔案
+        run: |
+          CSV_URL="https://mas.nstc.gov.tw/OPENDATA/GetFile?format=csv&serialno=454&fileodr=1"
+          CSV_PATH="data/nstc_typhoon_index.csv"
+          echo "Downloading CSV from NSTC..."
+          # 使用 curl 下載 CSV 檔案，並禁用 SSL 憑證驗證 (-k 或 --insecure)
+          curl -k -o "$CSV_PATH" "$CSV_URL"
+          echo "Downloaded CSV to $CSV_PATH"
+
+      - name: Run Python script to parse CSV and download KML # 執行 Python 腳本來解析 CSV 並下載 KML
+        # 呼叫我們剛剛創建的 Python 腳本
+        run: python scripts/download_typhoon_data.py
+        env:
+          # 將路徑作為環境變數傳遞給 Python 腳本
+          CSV_PATH: ${{ github.workspace }}/data/nstc_typhoon_index.csv
+          KML_PATH: ${{ github.workspace }}/data/typhoon_track.kml
+
+      - name: Configure Git and Pull latest changes # 配置 Git 並拉取最新變動
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # 在提交前先拉取遠端最新變動，解決 'fetch first' 錯誤
+          git pull origin main --rebase # 使用 rebase 避免不必要的合併提交
+
+      - name: Commit and push changes # 第三步：將下載的 CSV 和 KML 檔案提交回您的 GitHub 倉庫
+        run: |
+          # 添加兩個檔案，如果其中一個不存在，git add 不會報錯
+          git add data/nstc_typhoon_index.csv data/typhoon_track.kml
+          # 只有當有實際變動時才提交，避免不必要的提交歷史
+          git diff --staged --quiet || git commit -m "Update NSTC typhoon data (CSV and KML)"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
