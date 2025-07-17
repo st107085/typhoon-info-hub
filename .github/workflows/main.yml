@@ -13,6 +13,9 @@ jobs:
     steps:
       - name: Checkout repository # 第一步：將您的 GitHub 倉庫程式碼下載到這個虛擬機
         uses: actions/checkout@v3
+        # 這裡添加 fetch-depth: 0 以確保拉取所有歷史記錄，方便合併
+        with:
+          fetch-depth: 0
 
       - name: Set up Python # 設定 Python 環境
         uses: actions/setup-python@v4
@@ -42,10 +45,15 @@ jobs:
           CSV_PATH: ${{ github.workspace }}/data/nstc_typhoon_index.csv
           KML_PATH: ${{ github.workspace }}/data/typhoon_track.kml
 
-      - name: Commit and push changes # 第三步：將下載的 CSV 和 KML 檔案提交回您的 GitHub 倉庫
+      - name: Configure Git and Pull latest changes # 配置 Git 並拉取最新變動
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # 在提交前先拉取遠端最新變動，解決 'fetch first' 錯誤
+          git pull origin main --rebase # 使用 rebase 避免不必要的合併提交
+
+      - name: Commit and push changes # 第三步：將下載的 CSV 和 KML 檔案提交回您的 GitHub 倉庫
+        run: |
           # 添加兩個檔案，如果其中一個不存在，git add 不會報錯
           git add data/nstc_typhoon_index.csv data/typhoon_track.kml
           # 只有當有實際變動時才提交，避免不必要的提交歷史
