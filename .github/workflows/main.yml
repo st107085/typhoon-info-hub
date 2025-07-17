@@ -22,95 +22,23 @@ jobs:
       - name: Install dependencies # 安裝 Python 的 requests 函式庫，用於下載 KML
         run: pip install requests
 
-      - name: Download CSV and KML # 第二步：下載 NSTC 的 CSV 檔案，並從中提取 KML 連結後下載 KML
+      - name: Create data directory # 確保 'data' 目錄存在
+        run: mkdir -p data
+
+      - name: Download CSV from NSTC # 下載 NSTC 的 CSV 檔案
         run: |
-          mkdir -p data # 確保 'data' 目錄存在
           CSV_URL="https://mas.nstc.gov.tw/OPENDATA/GetFile?format=csv&serialno=454&fileodr=1"
           CSV_PATH="data/nstc_typhoon_index.csv"
-          KML_PATH="data/typhoon_track.kml"
-
           echo "Downloading CSV from NSTC..."
           # 使用 curl 下載 CSV 檔案，並禁用 SSL 憑證驗證 (-k 或 --insecure)
           curl -k -o "$CSV_PATH" "$CSV_URL"
           echo "Downloaded CSV to $CSV_PATH"
 
-          echo "Parsing CSV and downloading KML..."
-          # 使用 Python 腳本解析 CSV 並下載 KML
-          # 注意：這裡的 Python 程式碼行都已修正為 12 個空格的縮排
-          python -c "
-            import csv
-            import io
-            import requests
-            import os
-            import sys
-
-            csv_path = os.environ.get('CSV_PATH')
-            kml_path = os.environ.get('KML_PATH')
-
-            print(f'Reading CSV from: {csv_path}')
-            try:
-                with open(csv_path, 'r', encoding='utf-8-sig') as f:
-                    csv_content = f.read()
-            except FileNotFoundError:
-                print(f'Error: CSV file not found at {csv_path}')
-                sys.exit(1) # Exit if CSV not found
-
-            # 嘗試使用 utf-8-sig 解碼，如果失敗則嘗試 big5
-            try:
-                csv_file = io.StringIO(csv_content)
-                reader = csv.reader(csv_file)
-                header = next(reader)
-            except Exception:
-                try:
-                    csv_file = io.StringIO(csv_content.encode('latin-1').decode('big5'))
-                    reader = csv.reader(csv_file)
-                    header = next(reader)
-                except Exception as e_big5:
-                    print(f'CSV parsing failed for both UTF-8 and Big5. Error: {e_big5}')
-                    sys.exit(1) # Exit if CSV parsing fails
-
-            data_link_index = -1
-            description_index = -1
-
-            try:
-                data_link_index = header.index('資料連結')
-                description_index = header.index('說明')
-            except ValueError:
-                print('CSV header missing required columns (資料連結 or 說明).')
-                sys.exit(1) # Exit if header columns are missing
-
-            kml_data_url = None
-            for row in reader:
-                if len(row) > max(data_link_index, description_index):
-                    description = row[description_index]
-                    # 關鍵字搜尋更寬鬆，以防描述文字變化
-                    if any(keyword in description for keyword in ['颱風路徑', '熱帶氣旋', '預測路徑', 'Typhoon Track', 'Typhoon_KML']):
-                        kml_data_url = row[data_link_index]
-                        break
-
-            if kml_data_url:
-                print(f'Found KML URL: {kml_data_url}')
-                try:
-                    # 下載 KML，並禁用 SSL 憑證驗證 (verify=False)，因為它可能指向 mas.nstc.gov.tw
-                    kml_response = requests.get(kml_data_url, timeout=30, verify=False)
-                    kml_response.raise_for_status() # 檢查 HTTP 錯誤
-                    with open(kml_path, 'w', encoding='utf-8') as f:
-                        f.write(kml_response.text)
-                    print(f'Downloaded KML to {kml_path}')
-                except Exception as e:
-                    print(f'Error downloading KML from {kml_data_url}: {e}')
-                    # 如果 KML 下載失敗，不退出，但會記錄錯誤
-                    # 確保即使 KML 下載失敗，也不會導致整個 Action 失敗
-                    # 這樣至少 CSV 會被更新，並且舊的 KML 會被移除
-                    if os.path.exists(kml_path):
-                        os.remove(kml_path) # 移除可能不完整的 KML 檔案
-            else:
-                print('No KML URL found in CSV.')
-                # 如果沒有找到 KML 連結，確保 KML 檔案被移除，避免提交舊的或空的 KML
-                if os.path.exists(kml_path):
-                    os.remove(kml_path)
-"
+      - name: Run Python script to parse CSV and download KML # 執行 Python 腳本來解析 CSV 並下載 KML
+        # 呼叫我們剛剛創建的 Python 腳本
+        run: python scripts/download_typhoon_data.py
         env:
+          # 將路徑作為環境變數傳遞給 Python 腳本
           CSV_PATH: ${{ github.workspace }}/data/nstc_typhoon_index.csv
           KML_PATH: ${{ github.workspace }}/data/typhoon_track.kml
 
